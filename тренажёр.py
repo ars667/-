@@ -1,4 +1,17 @@
 from random import randint
+import time
+import tkinter as tk
+from tkinter import *
+import matplotlib.pyplot as plt
+import numpy as np  # библиотека для классических массивов
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+
+
+
+window = tk.Tk()
+window.title("Тренажёер")
+window.geometry("1280x720")
 
 
 class Task:
@@ -15,9 +28,51 @@ class Task:
             return False
 
     def challenge(self):
-        print(self.problem)
-        s_answer = int(input('Введите ответ:'))
-        return self.check(s_answer)
+        # Контейнер для хранения результата
+        self.result = None
+
+        # Удаляем предыдущие элементы, если они есть
+        for widget in window.winfo_children():
+            widget.destroy()
+
+        # Текст задачи
+        text2 = Text(window, padx=0, pady=0, width=50, height=5, bg='grey', fg='black', wrap=WORD)
+        text2.insert("1.0", self.problem)
+        text2.config(state=DISABLED)  # Делаем текст только для чтения
+        text2.pack(pady=10)
+
+        # Поле ввода
+        entry = Entry(window, width=20, font=('Arial', 14))
+        entry.pack(pady=10)
+
+        # Функция для обработки ответа
+        def submit_answer():
+            try:
+                s_answer = int(entry.get())
+                self.result = self.check(s_answer)  # Проверяем правильность ответа
+                result_text = "Правильно!" if self.result else "Неправильно!"
+            except ValueError:
+                result_text = "Введите числовое значение!"
+
+            # Отображение результата
+            result_label.config(text=result_text)
+
+            if self.result is not None:  # Закрываем интерфейс, если ответ дан
+                window.quit()
+
+        # Кнопка подтверждения
+        submit_button = Button(window, text="Проверить ответ", command=submit_answer)
+        submit_button.pack(pady=10)
+
+        # Метка для результата
+        result_label = Label(window, text="", font=('Arial', 14), fg='green')
+        result_label.pack(pady=10)
+
+        # Запускаем главный цикл окна
+        window.mainloop()
+
+        # Возвращаем результат после завершения ввода
+        return self.result
 
 
 class Prototype:
@@ -73,15 +128,67 @@ class User:
             self.prototypes[i].level += current_res[0]
 
     def full_work(self):
-        print(
-            'Здравствуйте! Это тренажёр по арифметике. Сейчас Вам будет предложено пройти вступительный тест,'
-            '\nа затем 5 дней Вы будете получать задачи для тренировки.')
-        self.introtest()
-        print(
-            f'Вы прошли вступтительный тест. Ваш уровень {self.prototypes[0].level}! Далее будет дневной тест. Приходите завтра')
-        for i in range(5):
-            self.day_test()
-            print(f"Прошёл день {self.day} из 5! Ваш уровень {self.prototypes[0].level} из 3")
+        # Удаляем предыдущие элементы, если они есть
+        for widget in window.winfo_children():
+            widget.destroy()
+
+        # Приветственный текст
+        text = Text(window, width=70, height=10, bg='grey', fg='black', wrap=WORD, font=('Arial', 14))
+        text.insert(
+            "1.0",
+            "Здравствуйте! Это тренажёр по арифметике. Сейчас Вам будет предложено пройти вступительный тест, "
+            "а затем 5 дней Вы будете получать задачи для тренировки."
+        )
+        text.config(state=DISABLED)  # Делаем текст только для чтения
+        text.pack(pady=20)
+
+        # Кнопка для начала вступительного теста
+        def start_introtest():
+            text.pack_forget()  # Убираем текст приветствия
+            button.pack_forget()  # Убираем кнопку
+            self.introtest()  # Выполняем вступительный тест
+
+            # Текст после вступительного теста
+            text_block = Text(window, width=70, height=10, bg='grey', fg='black', wrap=WORD, font=('Arial', 14))
+            text_block.insert(
+                "1.0",
+                f"Вы прошли вступительный тест. Ваш уровень {self.prototypes[0].level}! "
+                "Далее будет дневной тест. Приходите завтра."
+            )
+            # Отображение графика
+            history_task1 = [self.history[i][0] for i in range(5)] if len(self.history) >= 5 else [0] * 5
+            fig = Figure(figsize=(6, 4), dpi=100)
+            ax = fig.add_subplot(111)
+            ax.plot([1, 2, 3, 4, 5], history_task1, marker='o')
+            ax.set_xlabel('Дни')
+            ax.set_ylabel('Успешность')
+            ax.set_title('Прогресс по теме "Таблица истинности"')
+
+            canvas = FigureCanvasTkAgg(fig, master=window)
+            canvas.draw()
+            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+            text_block.config(state=DISABLED)  # Делаем текст только для чтения
+            text_block.pack(pady=20)
+
+            # Кнопка для начала дневных тестов
+            def start_day_tests():
+                text_block.pack_forget()  # Убираем текст вступительного теста
+                start_button.pack_forget()  # Убираем кнопку
+                for i in range(5):
+                    self.day_test()
+                    print(f"Прошёл день {self.day} из 5! Ваш уровень {self.prototypes[0].level} из 3")
+                window.quit()  # Завершаем приложение
+
+            # Кнопка для начала дневных тестов
+            start_button = Button(window, text="Начать дневные тесты", command=start_day_tests)
+            start_button.pack(pady=20)
+
+        # Кнопка для начала вступительного теста
+        button = Button(window, text="Начать вступительный тест", command=start_introtest)
+        button.pack(pady=20)
+
+        window.mainloop()
+
 
 task1 = Task('задачка1', '2+3', 5, 0)
 task2 = Task('задачка2', '10-4', 6, 0)
@@ -111,20 +218,18 @@ user = User()
 user.prototypes = [proto1, proto2, proto3]
 user.full_work()
 
-dict = {0:'Таблица истинности', 1:'Упрощение', 2:'Доказательства'}
+dict = {0: 'Таблица истинности', 1: 'Упрощение', 2: 'Доказательства'}
+
+
 def show_progress(n):
-  history_task1 = [user.history[i][n] for i in range(5)]
-  fig, ax = plt.subplots()  # Create a figure containing a single Axes.
-  ax.bar(['день 1', 'день 2', 'день 3', 'день 4', 'день 5'], history_task1)  # Plot some data on the Axes.
-  ax.set_xlabel('дни')
-  ax.set_ylabel('успешность')
-  ax.set_title(f'Прогресс по теме {dict[n]}')
-  plt.show()  # Show the figure.
+    history_task1 = [user.history[i][n] for i in range(5)]
+    fig, ax = plt.subplots()  # Create a figure containing a single Axes.
+    ax.bar(['день 1', 'день 2', 'день 3', 'день 4', 'день 5'], history_task1)  # Plot some data on the Axes.
+    ax.set_xlabel('дни')
+    ax.set_ylabel('успешность')
+    ax.set_title(f'Прогресс по теме {dict[n]}')
+    plt.show()  # Show the figure.
+
 
 for i in range(3):
     show_progress(i)
-
-
-
-
-
