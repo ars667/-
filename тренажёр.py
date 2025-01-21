@@ -7,8 +7,6 @@ import numpy as np  # библиотека для классических ма�
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
-
-
 window = tk.Tk()
 window.title("Тренажёер")
 window.geometry("1280x720")
@@ -31,18 +29,25 @@ class Task:
         # Контейнер для хранения результата
         self.result = None
 
-        # Удаляем предыдущие элементы, если они есть
         for widget in window.winfo_children():
-            widget.destroy()
+            if widget.widgetName == 'text2':
+                widget.destroy()
+            if widget.widgetName == 'entry':
+                widget.destroy()
+            if widget.widgetName == 'rlabel':
+                widget.destroy()
+        # Удаляем предыдущие элементы, если они есть
+        # for widget in window.winfo_children():
+        #    widget.destroy()
 
         # Текст задачи
-        text2 = Text(window, padx=0, pady=0, width=50, height=5, bg='grey', fg='black', wrap=WORD)
+        text2 = Text(window, padx=0, pady=0, width=50, height=5, bg='grey', fg='black', wrap=WORD, name='text2')
         text2.insert("1.0", self.problem)
         text2.config(state=DISABLED)  # Делаем текст только для чтения
         text2.pack(pady=10)
 
         # Поле ввода
-        entry = Entry(window, width=20, font=('Arial', 14))
+        entry = Entry(window, width=20, font=('Arial', 14), name='entry')
         entry.pack(pady=10)
 
         # Функция для обработки ответа
@@ -65,12 +70,12 @@ class Task:
         submit_button.pack(pady=10)
 
         # Метка для результата
-        result_label = Label(window, text="", font=('Arial', 14), fg='green')
+        result_label = Label(window, text="", font=('Arial', 14), fg='green', name='rlabel')
         result_label.pack(pady=10)
 
         # Запускаем главный цикл окна
         window.mainloop()
-
+        submit_button.pack_forget()
         # Возвращаем результат после завершения ввода
         return self.result
 
@@ -153,11 +158,10 @@ class User:
             text_block.insert(
                 "1.0",
                 f"Вы прошли вступительный тест. Ваш уровень {self.prototypes[0].level}! "
-                "Далее будет дневной тест. Приходите завтра."
             )
             # Отображение графика
             history_task1 = [self.history[i][0] for i in range(5)] if len(self.history) >= 5 else [0] * 5
-            fig = Figure(figsize=(6, 4), dpi=100)
+            fig = Figure(figsize=(4, 3), dpi=100)
             ax = fig.add_subplot(111)
             ax.plot([1, 2, 3, 4, 5], history_task1, marker='o')
             ax.set_xlabel('Дни')
@@ -166,25 +170,42 @@ class User:
 
             canvas = FigureCanvasTkAgg(fig, master=window)
             canvas.draw()
-            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+            canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True, pady=(100, 0))
             text_block.config(state=DISABLED)  # Делаем текст только для чтения
             text_block.pack(pady=20)
 
+            text_block.pack_forget()
+
+            # canvas.get_tk_widget().pack_forget()
+
             # Кнопка для начала дневных тестов
             def start_day_tests():
-                text_block.pack_forget()  # Убираем текст вступительного теста
-                start_button.pack_forget()  # Убираем кнопку
-                for i in range(5):
+                new_text_block = Text(window, width=70, height=10, bg='grey', fg='black', wrap=WORD,
+                                      font=('Arial', 14))
+                new_text_block.config(state=NORMAL)  # Делаем текст только для чтения
+                text_block.pack_forget()  # Убираем текст вступительного тестаt
+
+                canvas.get_tk_widget().pack_forget()
+                new_text_block.pack(pady=20)
+                # start_button.pack_forget()  # Убираем кнопку
+                i = 0
+                while i < 5:
+
+                    new_text_block.insert('1.0', f"Прошёл день {self.day} из 5! Ваш уровень {self.prototypes[0].level} из 3")
+
+                    window.update()
                     self.day_test()
-                    print(f"Прошёл день {self.day} из 5! Ваш уровень {self.prototypes[0].level} из 3")
-                window.quit()  # Завершаем приложение
+                    i += 1
+
 
             # Кнопка для начала дневных тестов
             start_button = Button(window, text="Начать дневные тесты", command=start_day_tests)
             start_button.pack(pady=20)
+            window.update()
+            print('!')
 
         # Кнопка для начала вступительного теста
-        button = Button(window, text="Начать вступительный тест", command=start_introtest)
+        button = Button(window, width=1000, height=1000, text="Начать вступительный тест", command=start_introtest, )
         button.pack(pady=20)
 
         window.mainloop()
