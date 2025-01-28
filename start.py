@@ -85,13 +85,13 @@ class Prototype:
         self.number = number
         self.tasks = []
         self.level = level
-        
+
     def add_task(self, task):
         self.tasks.append(task)
 
     def give_tasks(self):
         success = []
-        
+
         for i in range(0, 2):
 
             num_task = randint(0, len(self.tasks) - 1)
@@ -107,39 +107,30 @@ class User:
         self.results = {'Таблица истинности': 0, 'Упрощение': 0, 'Доказательства': 0}
         self.day = -1
         self.history = []
-    
-    def load_data(self):
-            try:
-                with open("save.txt", "r") as file:
-                    self.day = float(file.readline().strip())  
-                    for prototype in self.prototypes:
-                        prototype.level = float(file.readline().strip())  
-            except:
-                pass
-            
-            self.button.forget()
-            self.text.forget()
-            self.text.pack_forget()  
-            self.button.pack_forget()
-            self.start_button.forget()
-                        
+        self.skip = 0
+
+    def skip_f(self):
+        self.skip = 1
+
     def save_data(self):
         with open("save.txt", "w") as file:
             file.write(f"{self.day}\n")  # Сохраняем текущий день
             for prototype in self.prototypes:
                 file.write(f"{prototype.level}\n")  # Сохраняем уровень сложности для каждого набора задач
+
     def load_data(self):
         try:
             with open("save.txt", "r") as file:
                 self.day = float(file.readline().strip())  # Читаем день
                 for prototype in self.prototypes:
-                    prototype.level = float(file.readline().strip())  # Читаем уровень сложности для каждого набора задач
+                    prototype.level = float(
+                        file.readline().strip())  # Читаем уровень сложности для каждого набора задач
         except FileNotFoundError:
             # Если файла нет (например, при первом запуске), начинаем с нуля
             self.day = -1
             for prototype in self.prototypes:
                 prototype.level = 0
-  
+
     def introtest(self):
         current_res = []
         for prototype in self.prototypes:
@@ -164,13 +155,9 @@ class User:
         for i in range(len(self.prototypes)):
             self.prototypes[i].level += current_res[0]
 
-    
-
-    
-   
     def full_work(self):
         # Удаляем предыдущие элементы, если они есть
-        
+
         for widget in window.winfo_children():
             widget.destroy()
 
@@ -183,15 +170,16 @@ class User:
         )
         text.config(state=DISABLED)  # Делаем текст только для чтения
         text.pack(pady=20)
-        button = Button(window, text="Загрузить данные", command = self.load_data() )
+        button = Button(window, text="Загрузить данные", command=self.skip_f())
         button.pack()
-            
+
         # Кнопка для начала вступительного теста
         def start_introtest():
             text.pack_forget()  # Убираем текст приветствия
             button.pack_forget()  # Убираем кнопку
-            self.introtest()  # Выполняем вступительный тест
-            
+            if self.skip == 0:
+                self.introtest()  # Выполняем вступительный тест
+
             # Текст после вступительного теста
             text_block = Text(window, width=70, height=10, bg='grey', fg='black', wrap=WORD, font=('Arial', 14))
             text_block.insert(
@@ -227,19 +215,16 @@ class User:
 
                 canvas.get_tk_widget().pack_forget()
                 new_text_block.pack(pady=20)
-                start_button.pack_forget()# start_button.pack_forget()  # Убираем кнопку
+                start_button.pack_forget()  # start_button.pack_forget()  # Убираем кнопку
                 i = 0
                 while i < 5:
-                    
                     user.save_data()
-                    new_text_block.insert('1.0', f"Прошёл день {self.day} из 5! Ваш уровень {self.prototypes[0].level} из 3")
+                    new_text_block.insert('1.0',
+                                          f"Прошёл день {self.day} из 5! Ваш уровень {self.prototypes[0].level} из 3")
 
                     window.update()
                     self.day_test()
                     i += 1
-                    
-                    
-
 
             # Кнопка для начала дневных тестов
             start_button = Button(window, text="Начать дневные тесты", command=start_day_tests)
@@ -248,7 +233,7 @@ class User:
             print('!')
 
         # Кнопка для начала вступительного теста
-        button = Button(window, width=1000, height=1000, text="Начать вступительный тест", command=start_introtest, )
+        button = Button(window, width=1000, height=1000, text="Начать", command=start_introtest, )
         button.pack(pady=20)
 
         window.mainloop()
@@ -297,9 +282,3 @@ def show_progress(n):
 
 for i in range(3):
     show_progress(i)
-    
-
-
-
-    
-
